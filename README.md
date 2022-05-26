@@ -12,14 +12,14 @@ We present a algorithms for performing the following tasks:
 We present two different algorithms for maximizing Lipschitz-like functions over the standard simplex:
 
 - A modified Piyavskii-Shubert algorithm that computes the maximum over an interval by finding successively better upper bounds on the objective function.\
-  [see [lipschitzlike_optimization/maximize_lipschitzlike_function_interval.py](lipschitzlike_optimization/maximize_lipschitzlike_function_interval.py)]\
+  [see [lipschitzlike_optimization/maximize_lipschitzlike_function_interval.py](lipschitzlike_optimization/maximize_lipschitzlike_function_interval.py)]
 
   The modified Piyavskii-Shubert algorithm is generalized to handle optimization over the standard simplex by constructing a dense curve that fill the simplex.\
   [see [lipschitzlike_optimization/maximize_lipschitzlike_function_standard_simplex_dense_curve.py](lipschitzlike_optimization/maximize_lipschitzlike_function_standard_simplex_dense_curve.py),\
        [lipschitzlike_optimization/fill_simplex.py](lipschitzlike_optimization/fill_simplex.py)]
 
 - A grid search based algorithm that computes the maximum over a grid on the standard simplex.\
-  [see [lipschitzlike_optimization/maximize_lipschitzlike_function_standard_simplex_grid_search.py](lipschitzlike_optimization/maximize_lipschitzlike_function_standard_simplex_grid_search.py)]\
+  [see [lipschitzlike_optimization/maximize_lipschitzlike_function_standard_simplex_grid_search.py](lipschitzlike_optimization/maximize_lipschitzlike_function_standard_simplex_grid_search.py)]
 
   We present an algorithm to efficiently query the elements of the grid without constructing the grid.\
   [see the function `get_grid_point` in [lipschitzlike_optimization/fill_simplex.py](lipschitzlike_optimization/fill_simplex.py)]\
@@ -38,11 +38,11 @@ Check out some examples of sum capacity computation using our algorithms in [com
 
 ## Maximum winning probability of nonlocal games using NS strategies
 We present an algorithm to compute the maximum winning probability of any given N-player nonlocal game using no-signalling strategies when the questions are drawn as per some specified probability distribution.\
-[see [no_signalling_strategy/maximize_winning_probability_no_signalling_strategy.py](no_signalling_strategy/maximize_winning_probability_no_signalling_strategy.py)]\
+[see [no_signalling_strategy/maximize_winning_probability_no_signalling_strategy.py](no_signalling_strategy/maximize_winning_probability_no_signalling_strategy.py)]
 
-This computation is done by appropriately encoding the constraints placed by the no-signalling requirement, and solving the resulting linear program.\
+This computation is done by appropriately encoding the constraints placed by the no-signalling requirement, and solving the resulting linear program.
 
-Owing to such an approach, one can use the same code to maximize any concave function of no-signalling distributions\
+Owing to such an approach, one can use the same code to maximize any concave function of no-signalling distributions
 by appropriately modifying the objective function in the code.
 
 As an application of our code, we compute the maximum winning probability of the signalling game using NS strategies when the questions are drawn uniformly at random.
@@ -52,7 +52,7 @@ The code has been implemented in Python 3 (3.10.2).
 
 The following modules are necessary to run the code: numpy (1.22.0), scipy (1.7.3), and cvxpy (1.1.18).
 
-In the brackets, we specify version number using which we tested the code.
+We specify the version number using which we tested the code in brackets.
 
 No installation is necessary and the code can be run as is.
 
