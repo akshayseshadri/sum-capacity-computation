@@ -1,6 +1,6 @@
 # Computing the sum capacity of two-sender multiple access channels
 
-We present a algorithms for performing the following tasks:
+We present algorithms for performing the following tasks:
 
 1. Optimizing Lipschitz-like functions over the standard simplex.
 
@@ -47,7 +47,7 @@ by appropriately modifying the objective function in the code.
 
 As an application of our code, we compute the maximum winning probability of the signalling game using NS strategies when the questions are drawn uniformly at random.
 
-# Dependencies and Installation
+# Dependencies and installation
 The code has been implemented in Python 3 (3.10.2).
 
 The following modules are necessary to run the code: numpy (1.22.0), scipy (1.7.3), and cvxpy (1.1.18).
