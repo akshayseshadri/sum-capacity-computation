@@ -54,7 +54,7 @@ def maximize_lipschitzlike_function_standard_simplex(f, beta, d, eps = 5e-2, max
         # modify beta to account for a factor of 2 from l1 norm
         beta_2d = lambda x: beta(2*x)
 
-        f_maximizer = Maximize_Lipschitzlike_Function_Interval(f_2d, beta_2d, 0, 1, (1/2)*eps, max_iter)
+        f_maximizer = Maximize_Lipschitzlike_Function_Interval(f_2d, beta_2d, 0, 1, eps, max_iter)
         f_max = f_maximizer.maximize()
     else:
         if alg == 'dense_curve':
@@ -132,7 +132,6 @@ def compute_sum_capacity_twosenderMAC(N, d1, d2, eps = 5e-2, max_iter = 1e3, alg
 
     # optimization problem
     opt_prob_p = cp.Problem(I_pq, constr_p)
-
 
     # initialization
     q = np.ones(d2)/d2
