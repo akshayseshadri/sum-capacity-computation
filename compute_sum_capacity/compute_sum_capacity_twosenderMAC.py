@@ -47,14 +47,7 @@ def maximize_lipschitzlike_function_standard_simplex(f, beta, d, eps = 5e-2, max
     # the norm ||vec(x) - vec(y)||_1 = 2 |x - y|, writing vec(x) = (x, 1 - x) and vec(y) = (y, 1 - y) for vec(x), vec(y) in standard simplex of dimension 2
     # therefore, beta(||vec(x) - vec(y)||_1) needs to be changed to beta(2|x - y|)
     if d == 2 and alg == 'dense_curve':
-        # ensure that the input to f is a vector
-        def f_2d(q):
-            q_vec = np.array([q, 1 - q])
-            return f(q_vec)
-        # modify beta to account for a factor of 2 from l1 norm
-        beta_2d = lambda x: beta(2*x)
-
-        f_maximizer = Maximize_Lipschitzlike_Function_Interval(f_2d, beta_2d, 0, 1, eps, max_iter)
+        f_maximizer = Maximize_Lipschitzlike_Function_Interval(f, beta, 0, 1, (1/2)*eps, max_iter)
         f_max = f_maximizer.maximize()
     else:
         if alg == 'dense_curve':
@@ -86,6 +79,11 @@ def compute_sum_capacity_twosenderMAC(N, d1, d2, eps = 5e-2, max_iter = 1e3, alg
                          valid options are "dense_curve" (default) and "grid_search"
             - quiet    : suppress printing of output
     """
+    # ensure that alg is specified in lower case
+    alg = str(alg).lower()
+    if not alg in ['dense_curve', 'grid_search']:
+        raise ValueError("Please specify a valid algorithm.")
+
     # the channel matrix (of shape |Z| x |A1||A2|)
     N = np.asarray(N)
 
@@ -138,32 +136,57 @@ def compute_sum_capacity_twosenderMAC(N, d1, d2, eps = 5e-2, max_iter = 1e3, alg
     A_q.value = np.hstack([N[:, j1*d2 + np.arange(d2)].dot(q).reshape((d, 1)) for j1 in range(d1)])
     b_q.value = np.array([B[j1*d2 + np.arange(d2)].dot(q) for j1 in range(d1)]).reshape((1, d1))
 
-    # function that computes the optimum over the (d1 - 1)-dimensional simplex
-    def f(q):
-        """
-            Computes
+    # function x * log(y) for computing binary entropy
+    xlogy = sp.special.xlogy
 
-                \max_p H(A_q p) - <b_q, p>
+    if d2 == 2 and alg == 'dense_curve':
+        # function that computes the optimum over the (d1 - 1)-dimensional simplex
+        def f(s):
+            """
+                Computes
 
-            where A_q(z, a1) = \sum_{a2} N(z | a1, a2) q(a2)
-            and   b_q(a1) = \sum_{a2} q(a2) \sum_z N(z | a1, a2) log(N(z | a1, a2))
-        """
-        A_q.value = np.hstack([N[:, j1*d2 + np.arange(d2)].dot(q).reshape((d, 1)) for j1 in range(d1)])
-        b_q.value = np.array([B[j1*d2 + np.arange(d2)].dot(q) for j1 in range(d1)]).reshape((1, d1))
+                    \max_p H(A_q p) - <b_q, p>
 
-        opt_prob_p.solve(warm_start = True)
+                where A_q(z, a1) = \sum_{a2} N(z | a1, a2) q(a2)
+                and   b_q(a1) = \sum_{a2} q(a2) \sum_z N(z | a1, a2) log(N(z | a1, a2))
+            """
+            q = [s, 1 - s]
+            A_q.value = np.hstack([N[:, j1*d2 + np.arange(d2)].dot(q).reshape((d, 1)) for j1 in range(d1)])
+            b_q.value = np.array([B[j1*d2 + np.arange(d2)].dot(q) for j1 in range(d1)]).reshape((1, d1))
 
-        return opt_prob_p.value
+            opt_prob_p.solve(warm_start = True)
 
-    # modified binary entropy
-    def h_overline(x):
-        if x <= 1/2:
-            return sp.stats.entropy([x, 1 - x])
-        else:
-            return np.log(2)
+            return opt_prob_p.value
 
-    # function defining the Lipschitz-like property of f
-    beta = lambda x: (0.5*np.log(d - 1) + H_N_max) * x + h_overline(0.5*x)
+        # function defining the Lipschitz-like property of f
+        def beta(x):
+            # heaviside step function is used instead of if-else statement for defining \overline{h}
+            xleqhalf = np.heaviside(0.5 - x, 1)
+            return 2 * (0.5*np.log(d - 1) + H_N_max) * x - xleqhalf * (xlogy(x, x) + xlogy(1 - x, 1 - x)) + (1 - xleqhalf) * np.log(2)
+    else:
+        # function that computes the optimum over the (d1 - 1)-dimensional simplex
+        def f(q):
+            """
+                Computes
+
+                    \max_p H(A_q p) - <b_q, p>
+
+                where A_q(z, a1) = \sum_{a2} N(z | a1, a2) q(a2)
+                and   b_q(a1) = \sum_{a2} q(a2) \sum_z N(z | a1, a2) log(N(z | a1, a2))
+            """
+            A_q.value = np.hstack([N[:, j1*d2 + np.arange(d2)].dot(q).reshape((d, 1)) for j1 in range(d1)])
+            b_q.value = np.array([B[j1*d2 + np.arange(d2)].dot(q) for j1 in range(d1)]).reshape((1, d1))
+
+            opt_prob_p.solve(warm_start = True)
+
+            return opt_prob_p.value
+
+        # function defining the Lipschitz-like property of f
+        def beta(x):
+            xb2 = 0.5 * x
+            # heaviside step function is used instead of if-else statement for defining \overline{h}
+            xleq1 = np.heaviside(0.5 - xb2, 1)
+            return (0.5*np.log(d - 1) + H_N_max) * x - xleq1 * (xlogy(xb2, xb2) + xlogy(1 - xb2, 1 - xb2)) + (1 - xleq1) * np.log(2)
 
     # compute the sum capacity by performing the optimization
     S_N = maximize_lipschitzlike_function_standard_simplex(f, beta, d2, eps, max_iter, alg, quiet)

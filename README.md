@@ -60,4 +60,4 @@ No installation is necessary and the code can be run as is.
 We release the code under [MIT license](LICENSE).
 
 # Reference
-Please consider citing our work TODO if you are using our code in your work.
+Please consider citing our work "On the separation of correlation-assisted sum capacities of multiple access channels" ([arxiv:2205.13538](https://arxiv.org/abs/2205.13538) and [doi: 10.1109/ISIT50566.2022.9834459](https://ieeexplore.ieee.org/abstract/document/9834459)) if you are using our code in your work.

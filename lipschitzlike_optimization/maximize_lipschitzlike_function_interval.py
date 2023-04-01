@@ -61,6 +61,16 @@ class Maximize_Lipschitzlike_Function_Interval():
         # the list is maintained in an order sorted as per q_max_list
         self.f_val_list = [f(a), f(b)]
 
+        # store the value of roots computed betwen any two points of q_max_list
+        # this prevents repeated computing of roots
+        self.root_list = [-1]
+
+        # values of bounding function at the root
+        self.F_bound_root_list = [-1]
+
+        # the location where a q_max was added
+        self.q_max_loc = 1
+
     def get_bounding_function_maximum(self):
         """
             Given q_0, ..., q_k, define F_i(q) = f(q_i) + beta(|q - q_i|) for 0 <= i <= k
@@ -85,21 +95,35 @@ class Maximize_Lipschitzlike_Function_Interval():
         # number of points to iterate through
         k = len(q_list)
 
-        # list of roots
-        root_list = np.zeros(k - 1)
+        ### find the roots of g_i
+        # q_list == 2 is the initial (base) step, where root_list is empty and needs to be constructed
+        if len(q_list) == 2:
+            for count in range(k - 1):
+                # find a root of g_i
+                self.root_list[count] = sp.optimize.brentq(g, q_list[count], q_list[count + 1], args = (count,))
 
-        # find the roots of g_i
-        for count in range(k - 1):
-            # find a root of g_i
-            root_list[count] = sp.optimize.brentq(g, q_list[count], q_list[count + 1], args = (count,))
+            # compute the bounding function value at each of the roots -- this amounts to computing F_i at the ith root
+            self.F_bound_root_list = [f_list[count] + beta(np.abs(root - q_list[count])) for (count, root) in enumerate(self.root_list)]
+        else:
+            # temporary list of roots in the interval segment defined by q_max_loc
+            root_list_temp = [0]*2
+            # only the roots in the intervals of q_list defined by the indices [q_max_loc - 1, q_max_loc] and [q_max_loc, q_max_loc + 1]
+            for (count, loc) in enumerate(range(self.q_max_loc - 1, self.q_max_loc + 1)):
+                # find a root of g_i
+                root_list_temp[count] = sp.optimize.brentq(g, q_list[loc], q_list[loc + 1], args = (loc,))
 
-        # compute the bounding function value at each of the roots -- this amounts to computing F_i at the ith root
-        F_bound_root_list = [f_list[count] + beta(np.abs(root - q_list[count])) for (count, root) in enumerate(root_list)]
+            # replace the root corresponding to the index q_max_loc - 1 with the newly computed roots
+            self.root_list[self.q_max_loc - 1] = root_list_temp[0]
+            self.root_list.insert(self.q_max_loc, root_list_temp[1])
+
+            # update the bounding function value at the newly computed roots
+            self.F_bound_root_list[self.q_max_loc - 1] = f_list[self.q_max_loc - 1] + beta(np.abs(root_list_temp[0] - q_list[self.q_max_loc - 1]))
+            self.F_bound_root_list.insert(self.q_max_loc, f_list[self.q_max_loc] + beta(np.abs(root_list_temp[1] - q_list[self.q_max_loc])))
 
         # find the index corresponding to the largest value of F_bound_root_list
-        root_max_index = np.argmax(F_bound_root_list)
-        root_max = root_list[root_max_index]
-        F_bound_max = F_bound_root_list[root_max_index]
+        root_max_index = np.argmax(self.F_bound_root_list)
+        root_max = self.root_list[root_max_index]
+        F_bound_max = self.F_bound_root_list[root_max_index]
 
         return (root_max, F_bound_max)
 
@@ -128,16 +152,16 @@ class Maximize_Lipschitzlike_Function_Interval():
 
             # update the current maximum list while mainting the sorting
             # find the location where q_max must be inserted to retain the sorting order
-            loc = bisect.bisect_left(self.q_max_list, q_max)
+            self.q_max_loc = bisect.bisect_left(self.q_max_list, q_max)
 
             # insert the point at the sorted location
-            self.q_max_list.insert(loc, q_max)
+            self.q_max_list.insert(self.q_max_loc, q_max)
 
             # current value of maximum
             f_max = self.f(q_max)
 
             # update the list of f(q_i) values, using the location obtained from sorting q_max_list
-            self.f_val_list.insert(loc, f_max)
+            self.f_val_list.insert(self.q_max_loc, f_max)
 
             if count % 100 == 0 and not self.quiet:
                 print("Iteration count:", count, end = "\r")
